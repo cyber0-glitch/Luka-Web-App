@@ -4,6 +4,7 @@ import { useApp } from '../../contexts/AppContext';
 import { useStreak } from '../../hooks/useStreak';
 import WeeklyChart from './WeeklyChart';
 import MonthlyHeatmap from './MonthlyHeatmap';
+import YearlyHeatmap from './YearlyHeatmap';
 
 interface HabitStatsProps {
   habit: Habit;
@@ -88,6 +89,11 @@ const HabitStats: React.FC<HabitStatsProps> = ({ habit }) => {
       {/* Monthly Heatmap */}
       <div className="p-4 rounded-xl bg-bg-secondary-light dark:bg-bg-secondary-dark">
         <MonthlyHeatmap habit={habit} logs={state.logs} />
+      </div>
+
+      {/* Yearly Heatmap */}
+      <div className="p-4 rounded-xl bg-bg-secondary-light dark:bg-bg-secondary-dark">
+        <YearlyHeatmap habit={habit} logs={state.logs} />
       </div>
 
       {/* Recent Activity */}

@@ -5,6 +5,7 @@ import CircularProgress from '../common/CircularProgress';
 import { useLogs } from '../../hooks/useLogs';
 import { useStreak } from '../../hooks/useStreak';
 import { useApp } from '../../contexts/AppContext';
+import { useSwipe } from '../../hooks/useSwipe';
 
 interface HabitCardProps {
   habit: Habit;
@@ -14,13 +15,34 @@ interface HabitCardProps {
 
 const HabitCard: React.FC<HabitCardProps> = ({ habit, onClick, onLongPress }) => {
   const { state } = useApp();
-  const { getLogForDate } = useLogs();
+  const { getLogForDate, createLog, logProgress } = useLogs();
   const { getCurrentStreak } = useStreak();
 
   const log = getLogForDate(habit.id, state.selectedDate);
   const currentValue = log?.value || 0;
   const percentage = Math.min((currentValue / habit.goal.value) * 100, 100);
   const currentStreak = getCurrentStreak(habit.id);
+
+  // Swipe gesture handlers
+  const handleSwipeRight = () => {
+    // Quick increment
+    const newValue = Math.min(currentValue + 1, habit.goal.value * 2);
+    const status = newValue >= habit.goal.value ? 'completed' : newValue > 0 ? 'partial' : 'missed';
+    const newLog = createLog(habit.id, state.selectedDate, newValue, status);
+    logProgress(newLog);
+  };
+
+  const handleSwipeLeft = () => {
+    // Mark as skipped
+    const newLog = createLog(habit.id, state.selectedDate, 0, 'skipped', 'Skipped');
+    logProgress(newLog);
+  };
+
+  const swipeHandlers = useSwipe({
+    onSwipeRight: handleSwipeRight,
+    onSwipeLeft: handleSwipeLeft,
+    threshold: 80,
+  });
 
   const getUnitDisplay = () => {
     if (habit.goal.unit === 'custom' && habit.goal.customUnitName) {
@@ -38,17 +60,42 @@ const HabitCard: React.FC<HabitCardProps> = ({ habit, onClick, onLongPress }) =>
   };
 
   return (
-    <motion.div
-      whileHover={{ scale: 1.01 }}
-      whileTap={{ scale: 0.99 }}
-      onClick={onClick}
-      onContextMenu={(e) => {
-        e.preventDefault();
-        onLongPress?.();
-      }}
-      className="h-18 p-4 rounded-2xl bg-bg-secondary-light dark:bg-bg-secondary-dark hover:shadow-md transition-all cursor-pointer"
-    >
-      <div className="flex items-center gap-4">
+    <div className="relative">
+      {/* Swipe indicator backgrounds */}
+      {swipeHandlers.isSwiping && (
+        <>
+          {swipeHandlers.swipeDirection === 'right' && (
+            <div className="absolute inset-0 bg-success/20 rounded-2xl flex items-center justify-start px-6 pointer-events-none">
+              <span className="text-2xl">+1</span>
+            </div>
+          )}
+          {swipeHandlers.swipeDirection === 'left' && (
+            <div className="absolute inset-0 bg-text-tertiary-light/20 dark:bg-text-tertiary-dark/20 rounded-2xl flex items-center justify-end px-6 pointer-events-none">
+              <span className="text-2xl">⏭️</span>
+            </div>
+          )}
+        </>
+      )}
+
+      <motion.div
+        whileHover={{ scale: 1.01 }}
+        whileTap={{ scale: 0.99 }}
+        onClick={() => {
+          // Don't trigger click if swiping
+          if (!swipeHandlers.isSwiping) {
+            onClick();
+          }
+        }}
+        onContextMenu={(e) => {
+          e.preventDefault();
+          onLongPress?.();
+        }}
+        onTouchStart={swipeHandlers.onTouchStart}
+        onTouchMove={swipeHandlers.onTouchMove}
+        onTouchEnd={swipeHandlers.onTouchEnd}
+        className="relative h-18 p-4 rounded-2xl bg-bg-secondary-light dark:bg-bg-secondary-dark hover:shadow-md transition-all cursor-pointer"
+      >
+        <div className="flex items-center gap-4">
         {/* Icon */}
         <div
           className="w-11 h-11 rounded-full flex items-center justify-center text-2xl flex-shrink-0"
@@ -88,6 +135,7 @@ const HabitCard: React.FC<HabitCardProps> = ({ habit, onClick, onLongPress }) =>
         </div>
       </div>
     </motion.div>
+    </div>
   );
 };
 

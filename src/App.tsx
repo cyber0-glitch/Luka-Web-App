@@ -4,6 +4,7 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import Dashboard from './pages/Dashboard';
 import Settings from './pages/Settings';
 import Statistics from './pages/Statistics';
+import PWAInstallPrompt from './components/common/PWAInstallPrompt';
 import './styles/globals.css';
 
 type View = 'dashboard' | 'settings' | 'statistics';
@@ -28,6 +29,8 @@ function App() {
         {currentView === 'statistics' && (
           <Statistics onBack={() => setCurrentView('dashboard')} />
         )}
+
+        <PWAInstallPrompt />
       </ThemeProvider>
     </AppProvider>
   );
