@@ -20,7 +20,7 @@ interface DashboardProps {
 
 const Dashboard: React.FC<DashboardProps> = ({ onSettingsClick, onStatsClick }) => {
   const { state } = useApp();
-  const { activeHabits, addHabit, updateHabit, getHabitById } = useHabits();
+  const { activeHabits, addHabit, updateHabit, deleteHabit, archiveHabit, getHabitById } = useHabits();
   const { getLogsForDate } = useLogs();
   const { getUncelebratedAchievements } = useAchievements();
 
@@ -183,6 +183,8 @@ const Dashboard: React.FC<DashboardProps> = ({ onSettingsClick, onStatsClick }) 
           existingHabit={editingHabit ? getHabitById(editingHabit) : undefined}
           onSave={handleSaveHabit}
           onCancel={handleCancelHabitForm}
+          onDelete={deleteHabit}
+          onArchive={archiveHabit}
         />
       </Modal>
 
