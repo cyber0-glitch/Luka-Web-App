@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { useApp } from '../contexts/AppContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { useNotifications } from '../hooks/useNotifications';
 import Button from '../components/common/Button';
 import Toast from '../components/common/Toast';
+import GroupsManagement from '../components/groups/GroupsManagement';
 import { exportData, importData, clearLocalStorage } from '../hooks/useLocalStorage';
 
 interface SettingsProps {
@@ -12,6 +14,7 @@ interface SettingsProps {
 const Settings: React.FC<SettingsProps> = ({ onBack }) => {
   const { state, dispatch } = useApp();
   const { darkModeStyle, setDarkModeStyle } = useTheme();
+  const { permission, requestPermission, sendNotification, isSupported } = useNotifications();
 
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
@@ -65,6 +68,30 @@ const Settings: React.FC<SettingsProps> = ({ onBack }) => {
       setTimeout(() => {
         window.location.reload();
       }, 1500);
+    }
+  };
+
+  const handleRequestNotificationPermission = async () => {
+    const result = await requestPermission();
+    if (result === 'granted') {
+      showMessage('Notification permission granted!', 'success');
+      // Send a test notification
+      sendNotification('Luka Habits', {
+        body: 'You will now receive habit reminders!',
+      });
+    } else if (result === 'denied') {
+      showMessage('Notification permission denied. Please enable in browser settings.', 'error');
+    }
+  };
+
+  const handleTestNotification = () => {
+    if (permission === 'granted') {
+      sendNotification('Test Notification', {
+        body: "This is a test notification from Luka Habits!",
+      });
+      showMessage('Test notification sent!', 'success');
+    } else {
+      showMessage('Please enable notifications first', 'error');
     }
   };
 
@@ -234,6 +261,66 @@ const Settings: React.FC<SettingsProps> = ({ onBack }) => {
                 />
               </div>
             </div>
+          </section>
+
+          {/* Notifications */}
+          <section className="p-6 rounded-2xl bg-bg-secondary-light dark:bg-bg-secondary-dark">
+            <h2 className="text-lg font-semibold text-text-primary-light dark:text-text-primary-dark mb-4">
+              Notifications
+            </h2>
+
+            {!isSupported ? (
+              <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
+                Notifications are not supported in your browser.
+              </p>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-text-primary-light dark:text-text-primary-dark">
+                      Browser Notifications
+                    </p>
+                    <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
+                      Status: {permission === 'granted' ? '✓ Enabled' : permission === 'denied' ? '✗ Denied' : 'Not enabled'}
+                    </p>
+                  </div>
+                  {permission !== 'granted' && (
+                    <Button variant="primary" size="sm" onClick={handleRequestNotificationPermission}>
+                      Enable
+                    </Button>
+                  )}
+                </div>
+
+                {permission === 'granted' && (
+                  <div>
+                    <Button variant="secondary" onClick={handleTestNotification} fullWidth>
+                      Send Test Notification
+                    </Button>
+                  </div>
+                )}
+
+                {permission === 'denied' && (
+                  <div className="p-3 rounded-lg bg-error/10 border border-error/20">
+                    <p className="text-sm text-error">
+                      Notifications are blocked. Please enable them in your browser settings.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </section>
+
+          {/* Groups Management */}
+          <section className="p-6 rounded-2xl bg-bg-secondary-light dark:bg-bg-secondary-dark">
+            <GroupsManagement
+              groups={state.groups}
+              onCreateGroup={(group) => dispatch({ type: 'ADD_GROUP', payload: group })}
+              onUpdateGroup={(group) => dispatch({ type: 'UPDATE_GROUP', payload: group })}
+              onDeleteGroup={(groupId) => dispatch({ type: 'DELETE_GROUP', payload: groupId })}
+              habitCountByGroup={(groupId) =>
+                state.habits.filter((h) => h.groupId === groupId && !h.archivedAt).length
+              }
+            />
           </section>
 
           {/* Data Management */}

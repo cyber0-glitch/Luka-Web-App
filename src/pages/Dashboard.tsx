@@ -3,6 +3,9 @@ import { useApp } from '../contexts/AppContext';
 import { useHabits } from '../hooks/useHabits';
 import { useLogs } from '../hooks/useLogs';
 import { useAchievements } from '../hooks/useAchievements';
+import { useTheme } from '../contexts/ThemeContext';
+import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
+import { getNextDay, getPreviousDay, getTodayString } from '../utils/dateUtils';
 import Header from '../components/layout/Header';
 import FloatingActionButton from '../components/layout/FloatingActionButton';
 import HabitList from '../components/habits/HabitList';
@@ -11,6 +14,7 @@ import CelebrationModal from '../components/achievements/CelebrationModal';
 import Modal from '../components/common/Modal';
 import TemplateGrid from '../components/habits/TemplateGrid';
 import HabitForm from '../components/habits/HabitForm';
+import KeyboardShortcutsHelp from '../components/common/KeyboardShortcutsHelp';
 import { HabitTemplate } from '../types';
 
 interface DashboardProps {
@@ -19,10 +23,11 @@ interface DashboardProps {
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ onSettingsClick, onStatsClick }) => {
-  const { state } = useApp();
-  const { activeHabits, addHabit, updateHabit, getHabitById } = useHabits();
+  const { state, dispatch } = useApp();
+  const { activeHabits, addHabit, updateHabit, deleteHabit, archiveHabit, getHabitById } = useHabits();
   const { getLogsForDate } = useLogs();
   const { getUncelebratedAchievements } = useAchievements();
+  const { toggleTheme } = useTheme();
 
   const [selectedHabitId, setSelectedHabitId] = useState<string | null>(null);
   const [showQuickLog, setShowQuickLog] = useState(false);
@@ -30,6 +35,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onSettingsClick, onStatsClick }) 
   const [showHabitForm, setShowHabitForm] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<HabitTemplate | null>(null);
   const [editingHabit, setEditingHabit] = useState<string | null>(null);
+  const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
 
   const selectedHabit = selectedHabitId ? getHabitById(selectedHabitId) : null;
 
@@ -110,6 +116,87 @@ const Dashboard: React.FC<DashboardProps> = ({ onSettingsClick, onStatsClick }) 
   const totalCount = activeHabits.length;
   const completionPercentage = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
+  // Keyboard shortcuts
+  const isModalOpen = showQuickLog || showTemplateGrid || showHabitForm || !!currentAchievement || showKeyboardHelp;
+
+  useKeyboardShortcuts([
+    {
+      key: 'n',
+      ctrl: true,
+      description: 'Create new habit',
+      action: () => {
+        if (!isModalOpen) handleAddHabitClick();
+      },
+    },
+    {
+      key: 's',
+      ctrl: true,
+      description: 'Open statistics',
+      action: () => {
+        if (!isModalOpen) onStatsClick();
+      },
+    },
+    {
+      key: ',',
+      ctrl: true,
+      description: 'Open settings',
+      action: () => {
+        if (!isModalOpen) onSettingsClick();
+      },
+    },
+    {
+      key: 'h',
+      ctrl: true,
+      description: 'Go to today',
+      action: () => {
+        if (!isModalOpen) dispatch({ type: 'SET_SELECTED_DATE', payload: getTodayString() });
+      },
+    },
+    {
+      key: 'ArrowLeft',
+      alt: true,
+      description: 'Previous day',
+      action: () => {
+        if (!isModalOpen) dispatch({ type: 'SET_SELECTED_DATE', payload: getPreviousDay(state.selectedDate) });
+      },
+    },
+    {
+      key: 'ArrowRight',
+      alt: true,
+      description: 'Next day',
+      action: () => {
+        if (!isModalOpen) dispatch({ type: 'SET_SELECTED_DATE', payload: getNextDay(state.selectedDate) });
+      },
+    },
+    {
+      key: 't',
+      ctrl: true,
+      description: 'Toggle theme',
+      action: () => {
+        toggleTheme();
+      },
+    },
+    {
+      key: '?',
+      shift: true,
+      description: 'Show keyboard shortcuts',
+      action: () => {
+        setShowKeyboardHelp(true);
+      },
+    },
+    {
+      key: 'Escape',
+      description: 'Close modal',
+      action: () => {
+        if (showQuickLog) handleCloseQuickLog();
+        else if (showTemplateGrid) setShowTemplateGrid(false);
+        else if (showHabitForm) handleCancelHabitForm();
+        else if (currentAchievement) handleCloseCelebration();
+        else if (showKeyboardHelp) setShowKeyboardHelp(false);
+      },
+    },
+  ], true);
+
   return (
     <div className="min-h-screen bg-bg-primary-light dark:bg-bg-primary-dark">
       <Header onSettingsClick={onSettingsClick} onStatsClick={onStatsClick} />
@@ -183,6 +270,8 @@ const Dashboard: React.FC<DashboardProps> = ({ onSettingsClick, onStatsClick }) 
           existingHabit={editingHabit ? getHabitById(editingHabit) : undefined}
           onSave={handleSaveHabit}
           onCancel={handleCancelHabitForm}
+          onDelete={deleteHabit}
+          onArchive={archiveHabit}
         />
       </Modal>
 
@@ -194,6 +283,12 @@ const Dashboard: React.FC<DashboardProps> = ({ onSettingsClick, onStatsClick }) 
           onClose={handleCloseCelebration}
         />
       )}
+
+      {/* Keyboard Shortcuts Help */}
+      <KeyboardShortcutsHelp
+        isOpen={showKeyboardHelp}
+        onClose={() => setShowKeyboardHelp(false)}
+      />
     </div>
   );
 };

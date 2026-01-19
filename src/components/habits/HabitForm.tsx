@@ -10,6 +10,8 @@ interface HabitFormProps {
   existingHabit?: Habit;
   onSave: (habit: Habit) => void;
   onCancel: () => void;
+  onDelete?: (habitId: string) => void;
+  onArchive?: (habitId: string) => void;
 }
 
 const HabitForm: React.FC<HabitFormProps> = ({
@@ -17,11 +19,14 @@ const HabitForm: React.FC<HabitFormProps> = ({
   existingHabit,
   onSave,
   onCancel,
+  onDelete,
+  onArchive,
 }) => {
   const { state } = useApp();
   const isEditing = !!existingHabit;
 
   const [step, setStep] = useState(1);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [formData, setFormData] = useState({
     name: template?.name || existingHabit?.name || '',
     description: template?.description || existingHabit?.description || '',
@@ -450,6 +455,64 @@ const HabitForm: React.FC<HabitFormProps> = ({
           </>
         )}
       </div>
+
+      {/* Delete/Archive Section (Edit Mode Only) */}
+      {isEditing && existingHabit && (
+        <div className="pt-6 border-t border-bg-tertiary-light dark:border-bg-tertiary-dark">
+          {!showDeleteConfirm ? (
+            <div className="flex gap-3">
+              {onArchive && (
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    onArchive(existingHabit.id);
+                    onCancel();
+                  }}
+                  fullWidth
+                >
+                  Archive Habit
+                </Button>
+              )}
+              {onDelete && (
+                <Button
+                  variant="danger"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  fullWidth
+                >
+                  Delete Habit
+                </Button>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-sm text-error">
+                This will permanently delete this habit and all its logs. This action cannot be undone.
+              </p>
+              <div className="flex gap-3">
+                <Button
+                  variant="ghost"
+                  onClick={() => setShowDeleteConfirm(false)}
+                  fullWidth
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="danger"
+                  onClick={() => {
+                    if (onDelete) {
+                      onDelete(existingHabit.id);
+                      onCancel();
+                    }
+                  }}
+                  fullWidth
+                >
+                  Confirm Delete
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Navigation */}
       <div className="flex gap-3">

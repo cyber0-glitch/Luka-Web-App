@@ -3,6 +3,7 @@ import { Habit } from '../../types';
 import Modal from '../common/Modal';
 import Button from '../common/Button';
 import CircularProgress from '../common/CircularProgress';
+import Timer from '../common/Timer';
 import { useLogs } from '../../hooks/useLogs';
 import { useApp } from '../../contexts/AppContext';
 import { useAchievements } from '../../hooks/useAchievements';
@@ -22,6 +23,7 @@ const QuickLogModal: React.FC<QuickLogModalProps> = ({ habit, isOpen, onClose })
   const [value, setValue] = useState(0);
   const [note, setNote] = useState('');
   const [showNote, setShowNote] = useState(false);
+  const [useTimer, setUseTimer] = useState(false);
 
   useEffect(() => {
     if (habit) {
@@ -49,6 +51,15 @@ const QuickLogModal: React.FC<QuickLogModalProps> = ({ habit, isOpen, onClose })
 
   const handleReset = () => {
     setValue(0);
+  };
+
+  const handleTimerComplete = (seconds: number) => {
+    // Convert seconds to the appropriate unit
+    if (habit.goal.unit === 'minutes') {
+      setValue(Math.round(seconds / 60));
+    } else if (habit.goal.unit === 'hours') {
+      setValue(Math.round(seconds / 3600));
+    }
   };
 
   const handleSave = () => {
@@ -107,8 +118,42 @@ const QuickLogModal: React.FC<QuickLogModalProps> = ({ habit, isOpen, onClose })
           </div>
         </div>
 
-        {/* Progress Circle */}
-        <div className="flex justify-center py-4">
+        {/* Timer Toggle for time-based habits */}
+        {(habit.goal.unit === 'minutes' || habit.goal.unit === 'hours') && (
+          <div className="flex justify-center gap-2 mb-4">
+            <button
+              onClick={() => setUseTimer(false)}
+              className={`px-4 py-2 rounded-lg text-sm transition-colors ${
+                !useTimer
+                  ? 'bg-accent text-white'
+                  : 'bg-bg-secondary-light dark:bg-bg-secondary-dark text-text-primary-light dark:text-text-primary-dark'
+              }`}
+            >
+              Manual Entry
+            </button>
+            <button
+              onClick={() => setUseTimer(true)}
+              className={`px-4 py-2 rounded-lg text-sm transition-colors ${
+                useTimer
+                  ? 'bg-accent text-white'
+                  : 'bg-bg-secondary-light dark:bg-bg-secondary-dark text-text-primary-light dark:text-text-primary-dark'
+              }`}
+            >
+              Use Timer
+            </button>
+          </div>
+        )}
+
+        {/* Timer View */}
+        {useTimer && (habit.goal.unit === 'minutes' || habit.goal.unit === 'hours') ? (
+          <Timer
+            onComplete={handleTimerComplete}
+            goalMinutes={habit.goal.unit === 'hours' ? habit.goal.value * 60 : habit.goal.value}
+          />
+        ) : (
+          <>
+            {/* Progress Circle */}
+            <div className="flex justify-center py-4">
           <CircularProgress
             percentage={percentage}
             size="xlarge"
@@ -170,6 +215,9 @@ const QuickLogModal: React.FC<QuickLogModalProps> = ({ habit, isOpen, onClose })
             Complete
           </Button>
         </div>
+
+          </>
+        )}
 
         {/* Note */}
         <div>
