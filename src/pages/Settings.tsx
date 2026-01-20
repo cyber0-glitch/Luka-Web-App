@@ -402,7 +402,7 @@ const Settings: React.FC<SettingsProps> = ({ onBack }) => {
 
             <div className="space-y-2 text-sm text-text-secondary-light dark:text-text-secondary-dark">
               <p>
-                <strong>Version:</strong> 1.1.0 (iOS Safari Fix)
+                <strong>Version:</strong> 1.2.0 (Modal Navigation Fix)
               </p>
               <p>
                 <strong>Description:</strong> A modern habit tracking app inspired by Grit
