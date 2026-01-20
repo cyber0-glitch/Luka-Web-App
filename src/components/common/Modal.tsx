@@ -91,11 +91,53 @@ const Modal: React.FC<ModalProps> = ({
             }}
             className={`relative w-full ${maxWidths[maxWidth]} bg-bg-primary-light dark:bg-bg-primary-dark rounded-t-3xl sm:rounded-3xl shadow-lg flex flex-col max-h-[90vh] sm:max-h-[85vh]`}
           >
+            {/* Close button for modals without title */}
+            {!title && (
+              <button
+                onClick={onClose}
+                className="absolute top-4 right-4 z-10 p-2 rounded-xl bg-bg-secondary-light dark:bg-bg-secondary-dark hover:bg-bg-tertiary-light dark:hover:bg-bg-tertiary-dark transition-colors"
+                aria-label="Close"
+              >
+                <svg
+                  className="w-6 h-6 text-text-secondary-light dark:text-text-secondary-dark"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            )}
+
             {title && (
-              <div className="flex-shrink-0 px-6 py-4 border-b border-bg-tertiary-light dark:border-bg-tertiary-dark">
+              <div className="flex-shrink-0 px-6 py-4 border-b border-bg-tertiary-light dark:border-bg-tertiary-dark flex items-center justify-between">
                 <h2 className="text-xl font-semibold text-text-primary-light dark:text-text-primary-dark">
                   {title}
                 </h2>
+                <button
+                  onClick={onClose}
+                  className="p-2 -mr-2 rounded-xl hover:bg-bg-secondary-light dark:hover:bg-bg-secondary-dark transition-colors"
+                  aria-label="Close"
+                >
+                  <svg
+                    className="w-6 h-6 text-text-secondary-light dark:text-text-secondary-dark"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
               </div>
             )}
 
