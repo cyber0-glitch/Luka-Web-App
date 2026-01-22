@@ -17,6 +17,7 @@ const initialState: AppState = {
   habits: [],
   logs: [],
   groups: [],
+  tasks: [],
   achievements: [],
   settings: defaultSettings,
   selectedDate: getTodayString(),
@@ -103,6 +104,51 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
         ),
       };
 
+    case 'ADD_TASK':
+      return {
+        ...state,
+        tasks: [...state.tasks, action.payload],
+      };
+
+    case 'UPDATE_TASK':
+      return {
+        ...state,
+        tasks: state.tasks.map(t =>
+          t.id === action.payload.id ? action.payload : t
+        ),
+      };
+
+    case 'DELETE_TASK':
+      return {
+        ...state,
+        tasks: state.tasks.filter(t => t.id !== action.payload),
+      };
+
+    case 'TOGGLE_TASK':
+      return {
+        ...state,
+        tasks: state.tasks.map(t =>
+          t.id === action.payload
+            ? {
+                ...t,
+                completed: !t.completed,
+                completedAt: !t.completed ? new Date().toISOString() : undefined,
+              }
+            : t
+        ),
+      };
+
+    case 'CLEANUP_COMPLETED_TASKS':
+      // Delete completed tasks older than 1 week
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+      return {
+        ...state,
+        tasks: state.tasks.filter(t =>
+          !t.completed || !t.completedAt || new Date(t.completedAt) > oneWeekAgo
+        ),
+      };
+
     case 'UNLOCK_ACHIEVEMENT':
       return {
         ...state,
@@ -169,6 +215,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       habits: loadFromLocalStorage('habits', []),
       logs: loadFromLocalStorage('logs', []),
       groups: loadFromLocalStorage('groups', []),
+      tasks: loadFromLocalStorage('tasks', []),
       achievements: loadFromLocalStorage('achievements', []),
       settings: { ...defaultSettings, ...loadFromLocalStorage('settings', {}) },
     };
@@ -180,12 +227,25 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       saveToLocalStorage('habits', state.habits);
       saveToLocalStorage('logs', state.logs);
       saveToLocalStorage('groups', state.groups);
+      saveToLocalStorage('tasks', state.tasks);
       saveToLocalStorage('achievements', state.achievements);
       saveToLocalStorage('settings', state.settings);
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [state.habits, state.logs, state.groups, state.achievements, state.settings]);
+  }, [state.habits, state.logs, state.groups, state.tasks, state.achievements, state.settings]);
+
+  // Cleanup completed tasks older than 1 week (run on mount and daily)
+  useEffect(() => {
+    dispatch({ type: 'CLEANUP_COMPLETED_TASKS' });
+
+    // Run cleanup daily
+    const interval = setInterval(() => {
+      dispatch({ type: 'CLEANUP_COMPLETED_TASKS' });
+    }, 24 * 60 * 60 * 1000); // 24 hours
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <AppContext.Provider value={{ state, dispatch }}>

@@ -52,6 +52,15 @@ export interface HabitGroup {
   collapsed: boolean;
 }
 
+export interface Task {
+  id: string;
+  text: string;
+  priority: 'low' | 'medium' | 'high'; // Green, Yellow, Red
+  completed: boolean;
+  createdAt: string;
+  completedAt?: string;
+}
+
 export interface Achievement {
   id: string;
   habitId: string;
@@ -75,6 +84,7 @@ export interface AppState {
   habits: Habit[];
   logs: HabitLog[];
   groups: HabitGroup[];
+  tasks: Task[];
   achievements: Achievement[];
   settings: UserSettings;
   selectedDate: string;
@@ -95,6 +105,11 @@ export type AppAction =
   | { type: 'ADD_GROUP'; payload: HabitGroup }
   | { type: 'UPDATE_GROUP'; payload: HabitGroup }
   | { type: 'DELETE_GROUP'; payload: string }
+  | { type: 'ADD_TASK'; payload: Task }
+  | { type: 'UPDATE_TASK'; payload: Task }
+  | { type: 'DELETE_TASK'; payload: string }
+  | { type: 'TOGGLE_TASK'; payload: string }
+  | { type: 'CLEANUP_COMPLETED_TASKS' }
   | { type: 'UNLOCK_ACHIEVEMENT'; payload: Achievement }
   | { type: 'MARK_ACHIEVEMENT_CELEBRATED'; payload: string }
   | { type: 'UPDATE_SETTINGS'; payload: Partial<UserSettings> }

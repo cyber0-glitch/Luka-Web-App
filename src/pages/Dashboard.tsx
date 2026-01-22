@@ -20,9 +20,10 @@ import { HabitTemplate } from '../types';
 interface DashboardProps {
   onSettingsClick: () => void;
   onStatsClick: () => void;
+  onTasksClick: () => void;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ onSettingsClick, onStatsClick }) => {
+const Dashboard: React.FC<DashboardProps> = ({ onSettingsClick, onStatsClick, onTasksClick }) => {
   const { state, dispatch } = useApp();
   const { activeHabits, addHabit, updateHabit, deleteHabit, archiveHabit, getHabitById } = useHabits();
   const { getLogsForDate } = useLogs();
@@ -199,7 +200,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onSettingsClick, onStatsClick }) 
 
   return (
     <div className="min-h-screen bg-bg-primary-light dark:bg-bg-primary-dark">
-      <Header onSettingsClick={onSettingsClick} onStatsClick={onStatsClick} />
+      <Header onSettingsClick={onSettingsClick} onStatsClick={onStatsClick} onTasksClick={onTasksClick} />
 
       <main className="max-w-4xl mx-auto px-4 py-6 pb-24">
         {/* Progress Summary */}
