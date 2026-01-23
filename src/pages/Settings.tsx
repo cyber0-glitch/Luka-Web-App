@@ -16,6 +16,9 @@ const Settings: React.FC<SettingsProps> = ({ onBack }) => {
   const { darkModeStyle, setDarkModeStyle } = useTheme();
   const { permission, requestPermission, sendNotification, isSupported } = useNotifications();
 
+  // Double-check notification support directly in component
+  const notificationSupported = isSupported || ('Notification' in window);
+
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success');
@@ -269,7 +272,7 @@ const Settings: React.FC<SettingsProps> = ({ onBack }) => {
               Notifications
             </h2>
 
-            {!isSupported ? (
+            {!notificationSupported ? (
               <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
                 Notifications are not supported in your browser.
               </p>
@@ -470,7 +473,7 @@ const Settings: React.FC<SettingsProps> = ({ onBack }) => {
 
             <div className="space-y-2 text-sm text-text-secondary-light dark:text-text-secondary-dark">
               <p>
-                <strong>Version:</strong> 1.4.0 (Tasks & Notifications)
+                <strong>Version:</strong> 1.4.1 (Tasks First, Notification Fix)
               </p>
               <p>
                 <strong>Description:</strong> A modern habit tracking app inspired by Grit

@@ -11,7 +11,7 @@ import './styles/globals.css';
 type View = 'dashboard' | 'settings' | 'statistics' | 'tasks';
 
 function App() {
-  const [currentView, setCurrentView] = useState<View>('dashboard');
+  const [currentView, setCurrentView] = useState<View>('tasks');
 
   return (
     <AppProvider>
@@ -25,15 +25,19 @@ function App() {
         )}
 
         {currentView === 'settings' && (
-          <Settings onBack={() => setCurrentView('dashboard')} />
+          <Settings onBack={() => setCurrentView('tasks')} />
         )}
 
         {currentView === 'statistics' && (
-          <Statistics onBack={() => setCurrentView('dashboard')} />
+          <Statistics onBack={() => setCurrentView('tasks')} />
         )}
 
         {currentView === 'tasks' && (
-          <Tasks onBack={() => setCurrentView('dashboard')} />
+          <Tasks
+            onHabitsClick={() => setCurrentView('dashboard')}
+            onSettingsClick={() => setCurrentView('settings')}
+            onStatsClick={() => setCurrentView('statistics')}
+          />
         )}
 
         <PWAInstallPrompt />
