@@ -74,6 +74,7 @@ export const exportData = () => {
     habits: loadFromLocalStorage('habits', []),
     logs: loadFromLocalStorage('logs', []),
     groups: loadFromLocalStorage('groups', []),
+    tasks: loadFromLocalStorage('tasks', []),
     achievements: loadFromLocalStorage('achievements', []),
     settings: loadFromLocalStorage('settings', {}),
     dataVersion: DATA_VERSION,
@@ -108,6 +109,7 @@ export const importData = (file: File): Promise<boolean> => {
         saveToLocalStorage('habits', data.habits);
         saveToLocalStorage('logs', data.logs || []);
         saveToLocalStorage('groups', data.groups || []);
+        saveToLocalStorage('tasks', data.tasks || []);
         saveToLocalStorage('achievements', data.achievements || []);
         saveToLocalStorage('settings', data.settings || {});
 
