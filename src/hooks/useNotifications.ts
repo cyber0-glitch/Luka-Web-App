@@ -10,16 +10,20 @@ interface UseNotificationsResult {
 }
 
 export const useNotifications = (): UseNotificationsResult => {
-  const [permission, setPermission] = useState<NotificationPermission>('default');
-  const [isSupported, setIsSupported] = useState(false);
+  // Check if notifications are supported immediately
+  const isNotificationSupported = typeof window !== 'undefined' && 'Notification' in window;
+
+  const [permission, setPermission] = useState<NotificationPermission>(
+    isNotificationSupported ? Notification.permission as NotificationPermission : 'denied'
+  );
+  const [isSupported] = useState(isNotificationSupported);
 
   useEffect(() => {
-    // Check if notifications are supported
-    if ('Notification' in window) {
-      setIsSupported(true);
+    // Update permission if it changes
+    if (isNotificationSupported) {
       setPermission(Notification.permission as NotificationPermission);
     }
-  }, []);
+  }, [isNotificationSupported]);
 
   const requestPermission = async (): Promise<NotificationPermission> => {
     if (!('Notification' in window)) {
