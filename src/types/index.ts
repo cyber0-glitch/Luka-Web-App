@@ -59,6 +59,8 @@ export interface Task {
   completed: boolean;
   createdAt: string;
   completedAt?: string;
+  dueDate?: string; // ISO date string (YYYY-MM-DD)
+  dueTime?: string; // Time string (HH:MM)
 }
 
 export interface Achievement {
@@ -78,6 +80,9 @@ export interface UserSettings {
   hideCompletedHabits: boolean;
   confettiEnabled: boolean;
   soundEnabled: boolean;
+  notificationsEnabled: boolean;
+  habitReminderTime: string; // Time string (HH:MM)
+  taskReminderTime: string; // Time string (HH:MM)
 }
 
 export interface AppState {

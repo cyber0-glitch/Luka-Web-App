@@ -292,11 +292,79 @@ const Settings: React.FC<SettingsProps> = ({ onBack }) => {
                 </div>
 
                 {permission === 'granted' && (
-                  <div>
-                    <Button variant="secondary" onClick={handleTestNotification} fullWidth>
-                      Send Test Notification
-                    </Button>
-                  </div>
+                  <>
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <p className="font-medium text-text-primary-light dark:text-text-primary-dark">
+                          Habit Reminder Time
+                        </p>
+                        <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
+                          Daily reminder to complete your habits
+                        </p>
+                      </div>
+                      <input
+                        type="time"
+                        value={state.settings.habitReminderTime}
+                        onChange={(e) =>
+                          dispatch({
+                            type: 'UPDATE_SETTINGS',
+                            payload: { habitReminderTime: e.target.value },
+                          })
+                        }
+                        className="px-4 py-2 rounded-xl bg-bg-tertiary-light dark:bg-bg-tertiary-dark text-text-primary-light dark:text-text-primary-dark focus:outline-none focus:ring-2 focus:ring-accent"
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <p className="font-medium text-text-primary-light dark:text-text-primary-dark">
+                          Task Reminder Time
+                        </p>
+                        <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
+                          Daily reminder to check your tasks
+                        </p>
+                      </div>
+                      <input
+                        type="time"
+                        value={state.settings.taskReminderTime}
+                        onChange={(e) =>
+                          dispatch({
+                            type: 'UPDATE_SETTINGS',
+                            payload: { taskReminderTime: e.target.value },
+                          })
+                        }
+                        className="px-4 py-2 rounded-xl bg-bg-tertiary-light dark:bg-bg-tertiary-dark text-text-primary-light dark:text-text-primary-dark focus:outline-none focus:ring-2 focus:ring-accent"
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium text-text-primary-light dark:text-text-primary-dark">
+                          Enable Daily Reminders
+                        </p>
+                        <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
+                          Receive daily habit and task reminders
+                        </p>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={state.settings.notificationsEnabled}
+                        onChange={(e) =>
+                          dispatch({
+                            type: 'UPDATE_SETTINGS',
+                            payload: { notificationsEnabled: e.target.checked },
+                          })
+                        }
+                        className="w-12 h-6 rounded-full accent-accent"
+                      />
+                    </div>
+
+                    <div>
+                      <Button variant="secondary" onClick={handleTestNotification} fullWidth>
+                        Send Test Notification
+                      </Button>
+                    </div>
+                  </>
                 )}
 
                 {permission === 'denied' && (
@@ -402,7 +470,7 @@ const Settings: React.FC<SettingsProps> = ({ onBack }) => {
 
             <div className="space-y-2 text-sm text-text-secondary-light dark:text-text-secondary-dark">
               <p>
-                <strong>Version:</strong> 1.3.0 (Tasks Feature)
+                <strong>Version:</strong> 1.4.0 (Tasks & Notifications)
               </p>
               <p>
                 <strong>Description:</strong> A modern habit tracking app inspired by Grit

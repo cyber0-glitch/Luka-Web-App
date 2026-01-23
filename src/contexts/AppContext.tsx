@@ -2,6 +2,7 @@ import React, { createContext, useContext, useReducer, useEffect, ReactNode } fr
 import { AppState, AppAction, UserSettings } from '../types';
 import { getTodayString } from '../utils/dateUtils';
 import { saveToLocalStorage, loadFromLocalStorage, checkDataVersion } from '../hooks/useLocalStorage';
+import { initializeTaskNotifications, initializeDailyReminders } from '../utils/notifications';
 
 const defaultSettings: UserSettings = {
   theme: 'system',
@@ -11,6 +12,9 @@ const defaultSettings: UserSettings = {
   hideCompletedHabits: false,
   confettiEnabled: true,
   soundEnabled: false,
+  notificationsEnabled: false,
+  habitReminderTime: '09:00',
+  taskReminderTime: '09:00',
 };
 
 const initialState: AppState = {
@@ -246,6 +250,28 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     return () => clearInterval(interval);
   }, []);
+
+  // Initialize task notifications on mount and when tasks change
+  useEffect(() => {
+    initializeTaskNotifications(state.tasks);
+  }, [state.tasks]);
+
+  // Initialize daily reminders when settings change
+  useEffect(() => {
+    const { notificationsEnabled, habitReminderTime, taskReminderTime } = state.settings;
+
+    if (notificationsEnabled) {
+      initializeDailyReminders(
+        true, // habits enabled
+        habitReminderTime,
+        true, // tasks enabled
+        taskReminderTime
+      );
+    } else {
+      // Disable all daily reminders
+      initializeDailyReminders(false, '09:00', false, '09:00');
+    }
+  }, [state.settings.notificationsEnabled, state.settings.habitReminderTime, state.settings.taskReminderTime]);
 
   return (
     <AppContext.Provider value={{ state, dispatch }}>
