@@ -13,34 +13,57 @@ const Tasks: React.FC<TasksProps> = ({ onBack }) => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [newTaskText, setNewTaskText] = useState('');
   const [newTaskPriority, setNewTaskPriority] = useState<'low' | 'medium' | 'high'>('low');
+  const [newTaskDueDate, setNewTaskDueDate] = useState('');
+  const [newTaskDueTime, setNewTaskDueTime] = useState('');
   const [showCompleted, setShowCompleted] = useState(true);
+  const [sortBy, setSortBy] = useState<'date' | 'priority'>('date');
 
   const activeTasks = state.tasks.filter((t) => !t.completed);
   const completedTasks = state.tasks.filter((t) => t.completed);
 
-  // Group active tasks by creation date
-  const groupedActiveTasks = activeTasks.reduce((groups, task) => {
-    const date = task.createdAt.split('T')[0];
-    if (!groups[date]) {
-      groups[date] = [];
+  // Group tasks by either date or priority based on sortBy state
+  const groupTasksBy = (tasks: Task[], groupBy: 'date' | 'priority') => {
+    if (groupBy === 'priority') {
+      return tasks.reduce((groups, task) => {
+        const priority = task.priority;
+        if (!groups[priority]) {
+          groups[priority] = [];
+        }
+        groups[priority].push(task);
+        return groups;
+      }, {} as Record<string, Task[]>);
+    } else {
+      return tasks.reduce((groups, task) => {
+        const date = task.createdAt.split('T')[0];
+        if (!groups[date]) {
+          groups[date] = [];
+        }
+        groups[date].push(task);
+        return groups;
+      }, {} as Record<string, Task[]>);
     }
-    groups[date].push(task);
-    return groups;
-  }, {} as Record<string, Task[]>);
+  };
 
-  // Group completed tasks by creation date
-  const groupedCompletedTasks = completedTasks.reduce((groups, task) => {
-    const date = task.createdAt.split('T')[0];
-    if (!groups[date]) {
-      groups[date] = [];
+  const groupedActiveTasks = groupTasksBy(activeTasks, sortBy);
+  const groupedCompletedTasks = groupTasksBy(completedTasks, sortBy);
+
+  // Sort keys based on grouping type
+  const getGroupKeys = (grouped: Record<string, Task[]>) => {
+    const keys = Object.keys(grouped);
+    if (sortBy === 'priority') {
+      // Priority order: high, medium, low
+      return keys.sort((a, b) => {
+        const order = { high: 0, medium: 1, low: 2 };
+        return order[a as 'high' | 'medium' | 'low'] - order[b as 'high' | 'medium' | 'low'];
+      });
+    } else {
+      // Date order: newest first
+      return keys.sort().reverse();
     }
-    groups[date].push(task);
-    return groups;
-  }, {} as Record<string, Task[]>);
+  };
 
-  // Sort dates (newest first)
-  const activeDates = Object.keys(groupedActiveTasks).sort().reverse();
-  const completedDates = Object.keys(groupedCompletedTasks).sort().reverse();
+  const activeKeys = getGroupKeys(groupedActiveTasks);
+  const completedKeys = getGroupKeys(groupedCompletedTasks);
 
   const getPriorityColor = (priority: 'low' | 'medium' | 'high') => {
     switch (priority) {
@@ -53,6 +76,31 @@ const Tasks: React.FC<TasksProps> = ({ onBack }) => {
     }
   };
 
+  const getPriorityLabel = (priority: string) => {
+    switch (priority) {
+      case 'high':
+        return 'High Priority';
+      case 'medium':
+        return 'Medium Priority';
+      case 'low':
+        return 'Low Priority';
+      default:
+        return priority;
+    }
+  };
+
+  const getGroupHeader = (key: string) => {
+    if (sortBy === 'priority') {
+      return getPriorityLabel(key);
+    } else {
+      try {
+        return format(parseISO(key), 'EEEE, MMMM d, yyyy');
+      } catch {
+        return key;
+      }
+    }
+  };
+
   const handleAddTask = () => {
     if (newTaskText.trim()) {
       const newTask: Task = {
@@ -61,10 +109,14 @@ const Tasks: React.FC<TasksProps> = ({ onBack }) => {
         priority: newTaskPriority,
         completed: false,
         createdAt: new Date().toISOString(),
+        dueDate: newTaskDueDate || undefined,
+        dueTime: newTaskDueTime || undefined,
       };
       dispatch({ type: 'ADD_TASK', payload: newTask });
       setNewTaskText('');
       setNewTaskPriority('low');
+      setNewTaskDueDate('');
+      setNewTaskDueTime('');
       setShowAddForm(false);
     }
   };
@@ -189,12 +241,39 @@ const Tasks: React.FC<TasksProps> = ({ onBack }) => {
                 </div>
               </div>
 
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-text-primary-light dark:text-text-primary-dark">
+                    Due Date (Optional)
+                  </label>
+                  <input
+                    type="date"
+                    value={newTaskDueDate}
+                    onChange={(e) => setNewTaskDueDate(e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl bg-bg-tertiary-light dark:bg-bg-tertiary-dark text-text-primary-light dark:text-text-primary-dark focus:outline-none focus:ring-2 focus:ring-accent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-text-primary-light dark:text-text-primary-dark">
+                    Due Time (Optional)
+                  </label>
+                  <input
+                    type="time"
+                    value={newTaskDueTime}
+                    onChange={(e) => setNewTaskDueTime(e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl bg-bg-tertiary-light dark:bg-bg-tertiary-dark text-text-primary-light dark:text-text-primary-dark focus:outline-none focus:ring-2 focus:ring-accent"
+                  />
+                </div>
+              </div>
+
               <div className="flex gap-2">
                 <button
                   onClick={() => {
                     setShowAddForm(false);
                     setNewTaskText('');
                     setNewTaskPriority('low');
+                    setNewTaskDueDate('');
+                    setNewTaskDueTime('');
                   }}
                   className="flex-1 px-6 py-3 rounded-xl bg-bg-tertiary-light dark:bg-bg-tertiary-dark text-text-primary-light dark:text-text-primary-dark hover:bg-bg-tertiary-light/80 dark:hover:bg-bg-tertiary-dark/80 transition-colors"
                 >
@@ -212,9 +291,35 @@ const Tasks: React.FC<TasksProps> = ({ onBack }) => {
           </motion.div>
         )}
 
+        {/* Sort Toggle */}
+        <div className="mb-6">
+          <div className="inline-flex rounded-xl bg-bg-secondary-light dark:bg-bg-secondary-dark p-1">
+            <button
+              onClick={() => setSortBy('date')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                sortBy === 'date'
+                  ? 'bg-accent text-white'
+                  : 'text-text-primary-light dark:text-text-primary-dark'
+              }`}
+            >
+              By Date
+            </button>
+            <button
+              onClick={() => setSortBy('priority')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                sortBy === 'priority'
+                  ? 'bg-accent text-white'
+                  : 'text-text-primary-light dark:text-text-primary-dark'
+              }`}
+            >
+              By Priority
+            </button>
+          </div>
+        </div>
+
         {/* Active Tasks */}
         <div className="space-y-6">
-          {activeDates.length === 0 && !showAddForm && (
+          {activeKeys.length === 0 && !showAddForm && (
             <div className="text-center py-12">
               <p className="text-text-secondary-light dark:text-text-secondary-dark mb-4">
                 No tasks yet. Tap the + button to add one!
@@ -222,13 +327,13 @@ const Tasks: React.FC<TasksProps> = ({ onBack }) => {
             </div>
           )}
 
-          {activeDates.map((date) => (
-            <div key={date}>
+          {activeKeys.map((key) => (
+            <div key={key}>
               <h3 className="text-sm font-medium text-text-secondary-light dark:text-text-secondary-dark mb-3">
-                {format(parseISO(date), 'EEEE, MMMM d, yyyy')}
+                {getGroupHeader(key)}
               </h3>
               <div className="space-y-2">
-                {groupedActiveTasks[date].map((task) => (
+                {groupedActiveTasks[key].map((task) => (
                   <motion.div
                     key={task.id}
                     initial={{ opacity: 0, x: -20 }}
@@ -264,13 +369,21 @@ const Tasks: React.FC<TasksProps> = ({ onBack }) => {
                     </button>
 
                     {/* Task Text */}
-                    <p
-                      className={`flex-1 text-text-primary-light dark:text-text-primary-dark ${
-                        task.completed ? 'line-through opacity-50' : ''
-                      }`}
-                    >
-                      {task.text}
-                    </p>
+                    <div className="flex-1">
+                      <p
+                        className={`text-text-primary-light dark:text-text-primary-dark ${
+                          task.completed ? 'line-through opacity-50' : ''
+                        }`}
+                      >
+                        {task.text}
+                      </p>
+                      {(task.dueDate || task.dueTime) && (
+                        <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-1">
+                          Due: {task.dueDate && format(parseISO(task.dueDate), 'MMM d, yyyy')}
+                          {task.dueTime && ` at ${task.dueTime}`}
+                        </p>
+                      )}
+                    </div>
 
                     {/* Delete Button */}
                     <button
@@ -327,13 +440,13 @@ const Tasks: React.FC<TasksProps> = ({ onBack }) => {
 
             {showCompleted && (
               <div className="space-y-6">
-                {completedDates.map((date) => (
-                  <div key={date}>
+                {completedKeys.map((key) => (
+                  <div key={key}>
                     <h3 className="text-sm font-medium text-text-secondary-light dark:text-text-secondary-dark mb-3">
-                      {format(parseISO(date), 'EEEE, MMMM d, yyyy')}
+                      {getGroupHeader(key)}
                     </h3>
                     <div className="space-y-2">
-                      {groupedCompletedTasks[date].map((task) => (
+                      {groupedCompletedTasks[key].map((task) => (
                         <motion.div
                           key={task.id}
                           initial={{ opacity: 0, x: -20 }}
