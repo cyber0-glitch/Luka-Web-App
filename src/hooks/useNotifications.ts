@@ -10,18 +10,8 @@ interface UseNotificationsResult {
 }
 
 export const useNotifications = (): UseNotificationsResult => {
-  // Check if notifications are supported - must be synchronous and immediate
-  const checkNotificationSupport = () => {
-    try {
-      return typeof window !== 'undefined' &&
-             typeof Notification !== 'undefined' &&
-             'Notification' in window;
-    } catch {
-      return false;
-    }
-  };
-
-  const isNotificationSupported = checkNotificationSupport();
+  // Simple, reliable notification support check
+  const isNotificationSupported = 'Notification' in window;
 
   const [permission, setPermission] = useState<NotificationPermission>(() => {
     if (isNotificationSupported) {
@@ -33,11 +23,14 @@ export const useNotifications = (): UseNotificationsResult => {
   const [isSupported] = useState(isNotificationSupported);
 
   useEffect(() => {
-    // Update permission if it changes
+    // Update permission state if it changes externally
     if (isNotificationSupported) {
-      setPermission(Notification.permission as NotificationPermission);
+      const currentPermission = Notification.permission as NotificationPermission;
+      if (currentPermission !== permission) {
+        setPermission(currentPermission);
+      }
     }
-  }, [isNotificationSupported]);
+  }, [isNotificationSupported, permission]);
 
   const requestPermission = async (): Promise<NotificationPermission> => {
     if (!('Notification' in window)) {
